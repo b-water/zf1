@@ -1304,25 +1304,33 @@ abstract class Zend_Db_Table_Abstract
         $whereList = array();
         $numberTerms = 0;
         foreach ($args as $keyPosition => $keyValues) {
-            $keyValuesCount = count($keyValues);
-            // Coerce the values to an array.
-            // Don't simply typecast to array, because the values
-            // might be Zend_Db_Expr objects.
-            if (!is_array($keyValues)) {
-                $keyValues = array($keyValues);
+            // Fix php 7.2 Parameter must be an array or an object that implements Countable
+            if(!is_array($keyValues) && !$keyValues instanceof Zend_Db_Expr)
+            {
+                $whereList[0][$keyPosition] = $keyValues;
             }
-            if ($numberTerms == 0) {
-                $numberTerms = $keyValuesCount;
-            } else if ($keyValuesCount != $numberTerms) {
-                require_once 'Zend/Db/Table/Exception.php';
-                throw new Zend_Db_Table_Exception("Missing value(s) for the primary key");
-            }
-            $keyValues = array_values($keyValues);
-            for ($i = 0; $i < $keyValuesCount; ++$i) {
-                if (!isset($whereList[$i])) {
-                    $whereList[$i] = array();
+            else
+            {
+                $keyValuesCount = count($keyValues);
+                // Coerce the values to an array.
+                // Don't simply typecast to array, because the values
+                // might be Zend_Db_Expr objects.
+                if (!is_array($keyValues)) {
+                    $keyValues = array($keyValues);
                 }
-                $whereList[$i][$keyPosition] = $keyValues[$i];
+                if ($numberTerms == 0) {
+                    $numberTerms = $keyValuesCount;
+                } else if ($keyValuesCount != $numberTerms) {
+                    require_once 'Zend/Db/Table/Exception.php';
+                    throw new Zend_Db_Table_Exception("Missing value(s) for the primary key");
+                }
+                $keyValues = array_values($keyValues);
+                for ($i = 0; $i < $keyValuesCount; ++$i) {
+                    if (!isset($whereList[$i])) {
+                        $whereList[$i] = array();
+                    }
+                    $whereList[$i][$keyPosition] = $keyValues[$i];
+                }
             }
         }
 
